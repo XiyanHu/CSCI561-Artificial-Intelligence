@@ -32,6 +32,7 @@ def solve():
 		output = DFS(initialFuel,startNode,goalNode,pathDict)
 	elif algorithm == "UCS":
 		output = UCS(initialFuel,startNode,goalNode,pathDict)
+
 		
 	if output == "No Path":
 		outputStr = "No Path"
@@ -42,6 +43,7 @@ def solve():
 	outputFile = open("output.txt","w")
 	outputFile.write(outputStr);
 	outputFile.close()
+
 
 #BFS algorithm function	
 def BFS(initialFuel,startNode,goalNode,pathDict):	
@@ -67,7 +69,8 @@ def BFS(initialFuel,startNode,goalNode,pathDict):
 				if child == goalNode:
 					res.append((route + child,leftFuel - usedFuel));
 				if len(res) == 1:
-					return res[0]	
+					return res[0]
+				visited.add(child)
 				frontier.put((child,route + child + "-",leftFuel - usedFuel))
 	return "No Path"
 
@@ -122,19 +125,22 @@ def checkAvailable(frontier,pathDict,goalNode,res):
 #UCS algorithm funciton
 def UCS(initialFuel,startNode,goalNode,pathDict):
 	res = []
+	firstPath = ();
 	iniFuel = int(initialFuel)
+
 	if startNode == goalNode:
 		res.append((startNode,iniFuel))
 		return res[0]
 	frontier = Queue.PriorityQueue() 
-	frontier.put((0,startNode,startNode,iniFuel))
+	frontier.put((0,startNode,0,startNode,iniFuel))
 	visited = set()
 	while not frontier.empty():
 		nodeTuple = frontier.get()
 		curCost = nodeTuple[0]
 		node = nodeTuple[1]
-		route = nodeTuple[2]
-		leftFuel = nodeTuple[3]
+		order = nodeTuple[2]
+		route = nodeTuple[3]
+		leftFuel = nodeTuple[4]
 		if node == goalNode:
 			res.append((route,leftFuel));
 			return res[0]
@@ -143,7 +149,15 @@ def UCS(initialFuel,startNode,goalNode,pathDict):
 			child = pathDict.get(node)[i][0]
 			usedFuel = int(pathDict.get(node)[i][1])
 			if child not in visited and (leftFuel - usedFuel) >= 0:
-				frontier.put((usedFuel + curCost,child,route + "-" + child ,leftFuel - usedFuel))
+				size = frontier.qsize()
+				oldOrder = -1
+				for i in range(size):
+					if child == frontier.queue[i][1]:
+						oldOrder = frontier.queue[i][2]
+				if oldOrder >= 0:
+					frontier.put((usedFuel + curCost,child,oldOrder+1,route + "-" + child ,leftFuel - usedFuel))
+				else:
+					frontier.put((usedFuel + curCost,child,0,route + "-" + child ,leftFuel - usedFuel))
 	return "No Path" 
 
 solve()
